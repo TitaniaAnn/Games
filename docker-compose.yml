@@ -1,65 +1,70 @@
+# docker-tools
+#   docker-machine ip default
 # docker-compose up -d
 # docker-compose restart
 # docker-compose stop
 # docker-compose rm -v
 # docker-compose logs
 
-nginx:
-  build: ./inc/docker/nginx/
-  ports:
-    - 8080:80
-  links:
-    - php
-  volumes_from:
-    - app
-  environment:
-    - NGINX_HOST=test.com
-    - NGINX_PORT=80
+version: "2.1"
 
-php:
-  build: ./inc/docker/php/
-  expose:
-    - 9000
-  links:
-    - mysql
-  volumes_from:
-    - app
+services:
+  nginx:
+    build: ./inc/docker/nginx/
+    ports:
+      - 80:80
+    links:
+      - php
+    volumes_from:
+      - app
+    # environment:
+    #  - NGINX_HOST=test.com
+    #  - NGINX_PORT=80
 
-app:
-  image: php:7.0-fpm
-  volumes:
-    - ./:/var/www/html
-  command: "true"
+  php:
+    build: ./inc/docker/php/
+    expose:
+      - 9000
+    links:
+      - mysql
+    volumes_from:
+      - app
 
-mysql:
-  image: mysql:latest
-  volumes_from:
-    - data
-  environment:
-    MYSQL_ROOT_PASSWORD: secret
-    MYSQL_DATABASE: project
-    MYSQL_USER: project
-    MYSQL_PASSWORD: project
+  app:
+    image: php:7.0-fpm
+    volumes:
+      - ./:/var/www/html
+    command: "true"
 
-data:
-  image: mysql:latest
-  volumes:
-    - /var/lib/mysql
-  command: "true"
+  mysql:
+    image: mysql:latest
+    volumes_from:
+      - data
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: project
+      MYSQL_USER: project
+      MYSQL_PASSWORD: project
 
-phpmyadmin:
-  image: phpmyadmin/phpmyadmin
-  ports:
-    - 8081:80
-  links:
-    - mysql
-  environment:
-    PMA_HOST: mysql
+  data:
+    image: mysql:latest
+    volumes:
+      - /var/lib/mysql
+    command: "true"
 
-# sass style.scss
-# sass --help
-sass:
-  image: larryprice/sass
-  volumes:
-    - ./inc:/src
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 8081:80
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+
+  # sass style.scss
+  # sass --help
+  sass:
+    image: larryprice/sass
+    volumes:
+      - ./inc:/src
 
