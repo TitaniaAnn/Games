@@ -5,58 +5,53 @@
 # docker-compose stop
 # docker-compose rm -v
 # docker-compose logs
+# docker-compose down -v
 
-version: "2.1"
+version: "3"
 
 services:
   nginx:
     build: ./inc/docker/nginx/
     ports:
-      - 80:80
-    links:
+      - 8080:80
+    depends_on:
       - php
-    volumes_from:
-      - app
-    # environment:
-    #  - NGINX_HOST=test.com
-    #  - NGINX_PORT=80
+    volumes:
+      - "${PROJECT_ROOT}:/var/www/html:ro"
+    networks:
+      - server
 
   php:
     build: ./inc/docker/php/
     expose:
       - 9000
-    links:
+    depends_on:
       - mysql
-    volumes_from:
-      - app
-
-  app:
-    image: php:7.0-fpm
     volumes:
-      - ./:/var/www/html
-    command: "true"
+      - "${PROJECT_ROOT}:/var/www/html:ro"
+    networks:
+      - database
+      - server
 
   mysql:
     image: mysql:latest
-    volumes_from:
-      - data
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: project
-      MYSQL_USER: project
-      MYSQL_PASSWORD: project
-
-  data:
-    image: mysql:latest
     volumes:
-      - /var/lib/mysql
-    command: "true"
+      - data:/var/lib/mysql
+    networks:
+      - database
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
       - 8081:80
-    links:
+    networks:
+      - database
+    depends_on:
       - mysql
     environment:
       PMA_HOST: mysql
@@ -67,4 +62,12 @@ services:
     image: larryprice/sass
     volumes:
       - ./inc:/src
+    networks:
+      - server
 
+volumes:
+  data:
+
+networks:
+  database:
+  server:
